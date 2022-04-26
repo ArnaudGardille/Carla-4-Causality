@@ -12,6 +12,12 @@ import os
 import sys
 import glob
 
+import pygame
+from pygame.locals import K_w
+from pygame.locals import K_a
+from pygame.locals import K_s
+from pygame.locals import K_d
+
 try:
     # /home/agardille/CARLA_0.9.6/PythonAPI/carla/dist/carla-*%d.%d-%s.egg
 
@@ -35,7 +41,7 @@ def main():
   params = {
     'number_of_vehicles': 100,
     'number_of_walkers': 0,
-    'display_size': 256,  # screen size of bird-eye render
+    'display_size': 300,  # screen size of bird-eye render
     'max_past_step': 1,  # the number of past steps to draw
     'dt': 0.1,  # time interval between two frames
     'discrete': False,  # whether to use discrete control space
@@ -64,12 +70,44 @@ def main():
   env = gym.make('carla-v0', params=params)
   obs = env.reset()
 
+  action = [0.0, 0.0]
   while True:
-    action = [1.0, 0.0]
+    
+
+    '''keys = pygame.key.get_pressed()
+    print(keys[K_w])
+    if keys[K_w]:
+      print('w')
+      action[0] = 1.0
+    if keys[K_a]:
+      action[1] = -0.1
+    if keys[K_s]:
+      action[0] = -1.0
+    if keys[K_d]:
+      action[1] = 0.1'''
+
+    for event in pygame.event.get():
+      if event.type == pygame.QUIT:
+        return True
+      elif event.type == pygame.KEYDOWN: #KEYUP:
+        print('key')
+        if event.key == K_w:
+          print('W')
+          action[0] += 1.0
+        elif event.key == K_a:
+          action[1] += 0.1
+        elif event.key == K_s:
+          action[0] += -1.0
+        elif event.key == K_d:
+          action[1] += -0.1
+          
+
     obs,r,done,info = env.step(action)
+    print(r)
     #print('state: ', obs['state'])
 
     if done:
+      action = [0.0, 0.0]
       print('state: ', obs['state'].shape)
       print('camera: ', obs['camera'].shape)
       print('birdeye: ', obs['birdeye'].shape)

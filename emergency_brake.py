@@ -8,17 +8,23 @@
 import gym
 import gym_carla
 
+import stable_baselines as sb
+
 import os
 import sys
 import glob
 
-try:
-    # /home/agardille/CARLA_0.9.6/PythonAPI/carla/dist/carla-*%d.%d-%s.egg
+from policies import *
 
-    print('/home/agardille/CARLA_0.9.6/PythonAPI/carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))
+'''import pygame
+from pygame.locals import K_w
+from pygame.locals import K_a
+from pygame.locals import K_s
+from pygame.locals import K_d'''
+
+try:
+    # /opt/carla-simulator/PythonAPI/carla/dist/carla-*%d.%d-%s.egg
+    # /home/agardille/CARLA_0.9.6/PythonAPI/carla/dist/carla-*%d.%d-%s.egg      
 
     sys.path.append(glob.glob('/home/agardille/CARLA_0.9.6/PythonAPI/carla/dist/carla-*%d.%d-%s.egg' % (
         sys.version_info.major,
@@ -35,7 +41,7 @@ def main():
   params = {
     'number_of_vehicles': 100,
     'number_of_walkers': 0,
-    'display_size': 256,  # screen size of bird-eye render
+    'display_size': 300,  # screen size of bird-eye render
     'max_past_step': 1,  # the number of past steps to draw
     'dt': 0.1,  # time interval between two frames
     'discrete': False,  # whether to use discrete control space
@@ -64,12 +70,52 @@ def main():
   env = gym.make('carla-v0', params=params)
   obs = env.reset()
 
+  #policy = ForwardPolicy(sess, ob_space, ac_space, n_env, n_steps, n_batch)
+  #policy = ControlPolicy(env.observation_space, env.action_space)
+  #model = WrappingAgent(policy=policy, env=env, learning_rate=0.0, verbose=1)
+  model = ForwardAgent()
+
+  #action = [0.0, 0.0]
   while True:
-    action = [1.0, 0.0]
+    
+
+    '''keys = pygame.key.get_pressed()
+    print(keys[K_w])
+    if keys[K_w]:
+      print('w')
+      action[0] = 1.0
+    if keys[K_a]:
+      action[1] = -0.1
+    if keys[K_s]:
+      action[0] = -1.0
+    if keys[K_d]:
+      action[1] = 0.1'''
+
+    '''for event in pygame.event.get():
+      if event.type == pygame.QUIT:
+        return True
+      elif event.type == pygame.KEYDOWN: #KEYUP:
+        print('key')
+        if event.key == K_w:
+          print('W')
+          action[0] += 1.0
+        elif event.key == K_a:
+          action[1] += 0.1
+        elif event.key == K_s:
+          action[0] += -1.0
+        elif event.key == K_d:
+          action[1] += -0.1'''
+
+    
+    action, _state = model.predict(obs, deterministic=True)
+    print('action: ', action)
+
     obs,r,done,info = env.step(action)
+    print(r)
     #print('state: ', obs['state'])
 
     if done:
+      action = [0.0, 0.0]
       print('state: ', obs['state'].shape)
       print('camera: ', obs['camera'].shape)
       print('birdeye: ', obs['birdeye'].shape)
