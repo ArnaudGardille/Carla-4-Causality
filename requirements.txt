@@ -1,0 +1,4 @@
+gym==0.12.5
+pygame==1.9.6
+imageio==2.0.1
+scikit-image==0.15 #16.2
