@@ -1,0 +1,6 @@
+dict_keys(['state', 'camera', 'birdeye', 'lidar'])
+state:  (4,)
+camera:  (256, 256, 3)
+birdeye:  (256, 256, 3)
+lidar:  (256, 256, 3)
+
