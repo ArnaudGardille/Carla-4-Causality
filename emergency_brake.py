@@ -70,51 +70,23 @@ def main():
   env = gym.make('carla-v0', params=params)
   obs = env.reset()
 
-  #policy = ForwardPolicy(sess, ob_space, ac_space, n_env, n_steps, n_batch)
-  #policy = ControlPolicy(env.observation_space, env.action_space)
-  #model = WrappingAgent(policy=policy, env=env, learning_rate=0.0, verbose=1)
-  model = ForwardAgent()
+  #model = ForwardAgent()
+  model = ControlAgent()
+  total_reward = 0.0
 
-  #action = [0.0, 0.0]
   while True:
     
-
-    '''keys = pygame.key.get_pressed()
-    print(keys[K_w])
-    if keys[K_w]:
-      print('w')
-      action[0] = 1.0
-    if keys[K_a]:
-      action[1] = -0.1
-    if keys[K_s]:
-      action[0] = -1.0
-    if keys[K_d]:
-      action[1] = 0.1'''
-
-    '''for event in pygame.event.get():
-      if event.type == pygame.QUIT:
-        return True
-      elif event.type == pygame.KEYDOWN: #KEYUP:
-        print('key')
-        if event.key == K_w:
-          print('W')
-          action[0] += 1.0
-        elif event.key == K_a:
-          action[1] += 0.1
-        elif event.key == K_s:
-          action[0] += -1.0
-        elif event.key == K_d:
-          action[1] += -0.1'''
-
-    
     action, _state = model.predict(obs, deterministic=True)
-    print('action: ', action)
+    #print('action: ', action)
 
     obs,r,done,info = env.step(action)
+    total_reward += r
     print(r)
     #print('state: ', obs['state'])
 
     if done:
+      print('total reward: ', total_reward)
+      total_reward = 0.0
       action = [0.0, 0.0]
       print('state: ', obs['state'].shape)
       print('camera: ', obs['camera'].shape)

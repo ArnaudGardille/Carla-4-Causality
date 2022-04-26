@@ -30,9 +30,10 @@ class ControlAgent():
         elif keys[K_s]:
             action[0] = -1.0
         if keys[K_a]:
-            action[0] = 1.0
+            action[1] = 0.2
         elif keys[K_d]:
-            action[0] = 1.0
+            action[1] = -0.2
+        pygame.event.pump() # process event queue
         return (action, 0)
 
 class ForwardAgent():
