@@ -30,9 +30,9 @@ class ControlAgent():
         elif keys[K_s]:
             action[0] = -1.0
         if keys[K_a]:
-            action[1] = 0.2
+            action[1] = 0.3
         elif keys[K_d]:
-            action[1] = -0.2
+            action[1] = -0.3
         pygame.event.pump() # process event queue
         return (action, 0)
 

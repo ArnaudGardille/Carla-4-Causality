@@ -1,5 +1,6 @@
 
 cd ~/CARLA_0.9.6
+cd /opt/carla-simulator
 ./CarlaUE4.sh -windowed -carla-port=2000
 
 cd ~/gym-carla

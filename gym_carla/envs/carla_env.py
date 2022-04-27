@@ -300,6 +300,9 @@ class CarlaEnv(gym.Env):
     self.time_step += 1
     self.total_step += 1
 
+    loc = self.ego.get_location()
+    #print(loc.x, loc.y, loc.z)
+
     return (self._get_obs(), self._get_reward(), self._terminal(), copy.deepcopy(info))
 
   def seed(self, seed=None):
@@ -308,6 +311,50 @@ class CarlaEnv(gym.Env):
 
   def render(self, mode):
     pass
+
+  def add_obstacle(self):
+
+    blueprint_library = self.world.get_blueprint_library()
+    vehicle_bp = random.choice(blueprint_library.filter('vehicle.*.*'))
+    #location = self.ego.get_location()
+    #location.x += 10.0
+    #location.z += 0.2
+    #relative_transform = carla.Transform(location, carla.Rotation(yaw=180))
+    #relative_transform = carla.Transform(carla.Location(x=5, z=1))
+    #obstacle = self.world.try_spawn_actor(vehicle_bp, relative_transform, attach_to=self.ego)
+
+    obstacle_on_waypoint = True
+
+    if obstacle_on_waypoint:
+      vehicle_location = self.ego.get_transform().location
+      vehicle_waypoint = self.world.get_map().get_waypoint(vehicle_location)
+
+      new_vehicle_waypoint = vehicle_waypoint.next(10)[0]
+      new_vehicle_location = new_vehicle_waypoint.transform.location + carla.Location(0, 0 , 2)
+      new_vehicle_rotation = new_vehicle_waypoint.transform.rotation
+    else:
+      vehicle_location = self.ego.get_transform().location
+      vehicle_direction = self.ego.get_transform().get_forward_vector()
+      vehicle_rotation = self.ego.get_transform().rotation
+
+      new_location = vehicle_location + 10*vehicle_direction
+      new_vehicle_location = carla.Location(new_location.x, new_location.y, new_location.z + 2)
+      new_vehicle_rotation = vehicle_rotation
+
+    obstacle = self.world.try_spawn_actor(vehicle_bp, carla.Transform(new_vehicle_location, new_vehicle_rotation))
+
+    spawned = obstacle == None
+    if spawned:
+      print("Spawning failed")
+    else:
+      obstacle.apply_control(carla.VehicleControl(hand_brake = True))
+
+    return spawned
+
+
+
+    
+
 
   def _create_vehicle_bluepprint(self, actor_filter, color=None, number_of_wheels=[4]):
     """Create the blueprint for a specific actor type.
@@ -670,3 +717,6 @@ class CarlaEnv(gym.Env):
           if actor.type_id == 'controller.ai.walker':
             actor.stop()
           actor.destroy()
+
+    if hasattr(self, 'ego') and False:
+      carla.command.DestroyActor(self.ego)
