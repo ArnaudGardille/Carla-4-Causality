@@ -14,6 +14,8 @@ import os
 import sys
 import glob
 
+from agents.navigation.basic_agent import BasicAgent
+
 import random
 
 from policies import *
@@ -22,7 +24,7 @@ from policies import *
 params_standard = {
   'number_of_vehicles': 100,
   'number_of_walkers': 0,
-  'display_size': 256,  # screen size of bird-eye render
+  'display_size': 600,  # screen size of bird-eye render
   'max_past_step': 1,  # the number of past steps to draw
   'dt': 0.1,  # time interval between two frames
   'discrete': False,  # whether to use discrete control space
@@ -94,30 +96,33 @@ def main():
   env = gym.make('carla-v0', params=params_emergency_break)
   obs = env.reset()
 
-  exist_obstacle = False
+  no_obstacle = True
 
   #model = ForwardAgent()
   model = ControlAgent()
   total_reward = 0.0
+
+  basic_agent = env.get_basic_agent()
 
   while True:
     
     action, _state = model.predict(obs, deterministic=True)
     #print('action: ', action)
 
+    control = basic_agent.run_step()
+    print("steer: ", control.steer)
+
     obs,r,done,info = env.step(action)
     total_reward += r
-    #print(r)
 
-    if random.randint(0, 100)==0 and not exist_obstacle:
-      print("adding obstacle")
-      exist_obstacle = env.add_obstacle()
+    if no_obstacle and random.randint(0, 100)==0 :
+      no_obstacle = env.add_obstacle()
     #print('state: ', obs['state'])
 
     if done:
       print('total reward: ', total_reward)
       total_reward = 0.0
-      exist_obstacle = False
+      no_obstacle = True
       action = [0.0, 0.0]
       print('state: ', obs['state'].shape)
       print('camera: ', obs['camera'].shape)

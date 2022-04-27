@@ -23,6 +23,7 @@ from gym_carla.envs.render import BirdeyeRender
 from gym_carla.envs.route_planner import RoutePlanner
 from gym_carla.envs.misc import *
 
+from agents.navigation.basic_agent import BasicAgent
 
 class CarlaEnv(gym.Env):
   """An OpenAI gym wrapper for CARLA simulator."""
@@ -40,7 +41,7 @@ class CarlaEnv(gym.Env):
     self.obs_range = params['obs_range']
     self.lidar_bin = params['lidar_bin']
     self.d_behind = params['d_behind']
-    self.obs_size = int(self.obs_range/self.lidar_bin)
+    self.obs_size = 600 #int(self.obs_range/self.lidar_bin)
     self.out_lane_thres = params['out_lane_thres']
     self.desired_speed = params['desired_speed']
     self.max_ego_spawn_times = params['max_ego_spawn_times']
@@ -70,7 +71,7 @@ class CarlaEnv(gym.Env):
       params['continuous_steer_range'][1]]), dtype=np.float32)  # acc, steer
     observation_space_dict = {
       'camera': spaces.Box(low=0, high=255, shape=(self.obs_size, self.obs_size, 3), dtype=np.uint8),
-      'lidar': spaces.Box(low=0, high=255, shape=(self.obs_size, self.obs_size, 3), dtype=np.uint8),
+      #'lidar': spaces.Box(low=0, high=255, shape=(self.obs_size, self.obs_size, 3), dtype=np.uint8),
       'birdeye': spaces.Box(low=0, high=255, shape=(self.obs_size, self.obs_size, 3), dtype=np.uint8),
       'state': spaces.Box(np.array([-2, -1, -5, 0]), np.array([2, 1, 30, 1]), dtype=np.float32)
       }
@@ -111,13 +112,13 @@ class CarlaEnv(gym.Env):
     self.collision_hist_l = 1 # collision history length
     self.collision_bp = self.world.get_blueprint_library().find('sensor.other.collision')
 
-    # Lidar sensor
+    '''# Lidar sensor
     self.lidar_data = None
     self.lidar_height = 2.1
     self.lidar_trans = carla.Transform(carla.Location(x=0.0, z=self.lidar_height))
     self.lidar_bp = self.world.get_blueprint_library().find('sensor.lidar.ray_cast')
     self.lidar_bp.set_attribute('channels', '32')
-    self.lidar_bp.set_attribute('range', '5000')
+    self.lidar_bp.set_attribute('range', '5000')'''
 
     # Camera sensor
     self.camera_img = np.zeros((self.obs_size, self.obs_size, 3), dtype=np.uint8)
@@ -150,7 +151,7 @@ class CarlaEnv(gym.Env):
   def reset(self):
     # Clear sensor objects  
     self.collision_sensor = None
-    self.lidar_sensor = None
+    #self.lidar_sensor = None
     self.camera_sensor = None
 
     # Delete sensors, vehicles and walkers
@@ -222,11 +223,11 @@ class CarlaEnv(gym.Env):
         self.collision_hist.pop(0)
     self.collision_hist = []
 
-    # Add lidar sensor
+    '''# Add lidar sensor
     self.lidar_sensor = self.world.spawn_actor(self.lidar_bp, self.lidar_trans, attach_to=self.ego)
     self.lidar_sensor.listen(lambda data: get_lidar_data(data))
     def get_lidar_data(data):
-      self.lidar_data = data
+      self.lidar_data = data'''
 
     # Add camera sensor
     self.camera_sensor = self.world.spawn_actor(self.camera_bp, self.camera_trans, attach_to=self.ego)
@@ -305,6 +306,9 @@ class CarlaEnv(gym.Env):
 
     return (self._get_obs(), self._get_reward(), self._terminal(), copy.deepcopy(info))
 
+  def get_basic_agent(self):
+    return BasicAgent(self.ego)
+
   def seed(self, seed=None):
     self.np_random, seed = seeding.np_random(seed)
     return [seed]
@@ -343,14 +347,14 @@ class CarlaEnv(gym.Env):
 
     obstacle = self.world.try_spawn_actor(vehicle_bp, carla.Transform(new_vehicle_location, new_vehicle_rotation))
 
-    spawned = obstacle == None
-    if spawned:
+    no_obstacle = obstacle == None
+
+    if no_obstacle:
       print("Spawning failed")
     else:
       obstacle.apply_control(carla.VehicleControl(hand_brake = True))
 
-    return spawned
-
+    return no_obstacle
 
 
     
@@ -536,7 +540,7 @@ class CarlaEnv(gym.Env):
     birdeye_surface = rgb_to_display_surface(birdeye, self.display_size)
     self.display.blit(birdeye_surface, (0, 0))
 
-    ## Lidar image generation
+    '''## Lidar image generation
     point_cloud = []
     # Get point cloud data
     for location in self.lidar_data:
@@ -571,7 +575,7 @@ class CarlaEnv(gym.Env):
     # Display lidar image
     lidar_surface = rgb_to_display_surface(lidar, self.display_size)
     self.display.blit(lidar_surface, (self.display_size, 0))
-
+    '''
     ## Display camera image
     camera = resize(self.camera_img, (self.obs_size, self.obs_size)) * 255
     camera_surface = rgb_to_display_surface(camera, self.display_size)
@@ -630,7 +634,7 @@ class CarlaEnv(gym.Env):
 
     obs = {
       'camera':camera.astype(np.uint8),
-      'lidar':lidar.astype(np.uint8),
+      #'lidar':lidar.astype(np.uint8),
       'birdeye':birdeye.astype(np.uint8),
       'state': state,
     }
